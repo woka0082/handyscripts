@@ -1,0 +1,26 @@
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files from editors
+*~
+*.bak
+
+# Shell script files
+*.sh~
+
+# Log files
+*.log
+
+# Geany project files
+*.geany
+
+# Environment variable files
+.env
+
+# Editor specific files
+.vscode/
+.idea/
+
+# Miscellaneous
+Thumbs.db
