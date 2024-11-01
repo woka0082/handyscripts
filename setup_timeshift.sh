@@ -1,3 +1,10 @@
+# This is the first part of the script 
+# to install timeshift and others 
+# to prepare for the second script 
+# to enable grub to automatically modify entries
+# everytime after timeshift create/remove snapshots
+
+
 #!/bin/bash
 
 # Function to check and install a package

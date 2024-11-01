@@ -1,3 +1,5 @@
+## This is intend to auto mount the secondary drive or partition
+
 #!/bin/bash
 
 # List all partitions
