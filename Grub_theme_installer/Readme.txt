@@ -1,9 +1,23 @@
-This script is inspired by https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes. 
-The change is to automatically scan the themes folder and list all the available themes. 
-It saves the trouble for the user to edit the install script when a new theme is added. 
-The sample theme here is from https://www.pling.com/s/All-Linux/p/2138019
+# README
 
-obviously to try it:
+## Overview
 
-chmod +x install.sh
-sudo ./install.sh
+This script is inspired by the project available at [Chris Titus Tech's Top 5 Bootloader Themes](https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes). The primary enhancement implemented in this version is the automation of theme scanning within the themes folder. This improvement allows the script to dynamically list all available themes, eliminating the need for manual edits to the installation script when new themes are added.
+
+## Sample Theme
+
+For demonstration purposes, the sample theme utilized in this project can be found at [Pling](https://www.pling.com/s/All-Linux/p/2138019).
+
+## Installation Instructions
+
+To install the script, please follow these steps:
+
+1. Make the installation script executable:
+   ```bash
+   chmod +x install.sh
+   ```
+
+2. Execute the installation script with superuser privileges:
+   ```bash
+   sudo ./install.sh
+   ```
