@@ -1,0 +1,13 @@
+https://images.wallpapersden.com/image/download/astronaut-with-jellyfish_a2pna2aUmZqaraWkpJRnamtlrWZpaWU.jpg
+wallpapersden.com_astronaut-with-jellyfish_2560x1440.jpg
+
+Enlightenment team, Enlightenment window manager & elementary:
+/usr/share/elementary/images/space.png
+
+endeavouros-theming-master @ https://github.com/endeavouros-team/endeavouros-theming:
+endeavouros_banner_icon.png
+endeavouros-logo-text-dark.png
+
+All images have been edited to fit the needs of the theme.
+All copyrights and materials belong to the respective authors.
+Thank you.

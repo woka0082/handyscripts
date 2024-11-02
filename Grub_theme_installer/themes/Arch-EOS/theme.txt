@@ -1,0 +1,84 @@
+# Dark-endeavouros grub theme
+# Astronaut variant
+# Font sizes available: sixteen, eighteen, twenty four and thirty two
+
+# global properties
+	title-text: "('-')" # you can barely see it
+	title-font: "DejaVu Sans Regular 18" # search and replace all number entries for a uniform look or change individually to suit your needs.
+	title-color: "#222"
+
++ boot_menu {
+	height = 80%
+	left = 1%
+	width = 55% # 1600x900 55%, 1920x1080 65% and so on.
+	top = 20%
+
+# os icons
+	icon_width = 32
+	icon_height = 32
+
+	item_font = "DejaVu Sans Regular 18"
+	item_color = "#cccccc" # silver
+	item_icon_space = 10
+	item_height = 36
+	item_padding = 5
+	item_spacing = 5
+
+	menu_pixmap_style = "menu/menu_*.png"
+
+	selected_item_color = "#7f7fff"
+	selected_item_pixmap_style = "select/select_*.png"
+
+	scrollbar = true
+		scrollbar_frame = "scrollbar/scrollbar_frame_*.png"
+		scrollbar_thumb = "scrollbar/scrollbar_thumb_*.png"
+		scrollbar_width = 10
+}
+
+# background
+desktop-color: "#000" # black
+desktop-image: "background/space-1080p.png"
+
+# middle right logo
++ image {
+file = "background/8039714.png"
+	left = 100%-650
+	top = 50%-540
+}
+
+# informational message
++ label {
+	align = "center"
+	color = "#777" # medium grey
+	font = "DejaVu Sans Regular 18"
+	text = "C opens the console. E edits selected entry. Enter executes selected entry. Esc goes back."
+	top = 97%
+	width = 100%
+	}
+
+# timer
++ progress_bar {
+	bar_style = "bar/bar_*.png"
+	highlight_style = "bar/bar_hl_*.png"
+	id = "__timeout__"
+	left = 33%
+	show_text = true
+	top = 93%
+	width = 33%
+	}
+
+#	terminal
+	terminal-border: "0"
+	terminal-box: "terminal/terminal_box_*.png"
+	terminal-font: "Terminus (TTF) Regular 18"
+	terminal-height: "98%"
+	terminal-left: "1%"
+	terminal-top: "1%"
+	terminal-width: "98%"
+
+# top logo
++ image {
+file = "background/endeavouros_banner_icon.png"
+	left = 25%-220
+	top = 3%
+}
