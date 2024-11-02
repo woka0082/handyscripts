@@ -1,125 +1,83 @@
-## Install favorite apps
-
-# Define the list of favorite apps, change at will, 
-# but make sure they do exist and match the names in official repo and AUR exactly
-
-apps=(
-    "loupe"
-    "vlc"
-    "mpv"
-    "librewolf-bin"
-    "obs-studio"
-    "vidcutter"
-    "geany"
-    "gparted"
-    "joplin-appimage"
-    "signal-desktop"
-    "localsend-bin"
-    "libreoffice-still"
-    "bat"
-    "fzf"
-    "tldr"
-    "backintime"
-    #"code"  # Visual Studio Code
-    # Add more packages as needed
-     
-)
 #!/bin/bash
 
-# Function to install yay
-install_yay() {
-    echo "Installing yay..."
-    sudo pacman -S --needed git base-devel
+# Define your package list
+packages=(
+  "neofetch"
+  "htop"
+  "vim"
+  # Add more packages here
+)
+
+# Step 2: Check if pacman is installed
+if ! command -v pacman &> /dev/null; then
+  echo "This script is designed for Arch Linux or Arch-based distros with pacman installed."
+  exit 1
+fi
+
+# Step 3: Check if yay or paru is installed
+if command -v yay &> /dev/null; then
+  installer="yay"
+elif command -v paru &> /dev/null; then
+  installer="paru"
+else
+  # Neither yay nor paru is installed, prompt to install one
+  read -p "Neither yay nor paru is installed. Do you want to install yay as the AUR helper? (Y/n): " choice
+  choice=${choice:-Y}
+  if [[ "$choice" =~ ^[Yy]$ ]]; then
+    installer="yay"
+    sudo pacman -S --needed --noconfirm git
     git clone https://aur.archlinux.org/yay.git
     cd yay || exit
     makepkg -si --noconfirm
-    cd .. && rm -rf yay
-}
-
-# Function to install paru
-install_paru() {
-    echo "Installing paru..."
-    sudo pacman -S --needed git base-devel
+    cd ..
+    rm -rf yay
+  else
+    installer="paru"
+    sudo pacman -S --needed --noconfirm git
     git clone https://aur.archlinux.org/paru.git
     cd paru || exit
     makepkg -si --noconfirm
-    cd .. && rm -rf paru
-}
-
-# Check for yay or paru
-if ! command -v yay &> /dev/null && ! command -v paru &> /dev/null; then
-    echo "Neither yay nor paru is installed."
-    echo "Please choose an option to install one (default is yay):"
-    echo "1) Install yay"
-    echo "2) Install paru"
-    read -rp "Enter your choice (1 or 2): " choice
-    choice=${choice:-1}  # Default to 1 if no input
-
-    case $choice in
-        1)
-            install_yay
-            ;;
-        2)
-            install_paru
-            ;;
-        *)
-            echo "Invalid option. Exiting."
-            exit 1
-            ;;
-    esac
+    cd ..
+    rm -rf paru
+  fi
 fi
 
-# Define the list of favorite apps
-apps=(
-    "vlc"
-    "git"
-    "neofetch"
-    "htop"
-    "firefox"
-    "code"  # Visual Studio Code
-    # Add more packages as needed
-)
-
-# Check if the packages are valid
-echo "Checking package validity..."
+# Step 4: Validate the packages in the list
 invalid_packages=()
-
-for app in "${apps[@]}"; do
-    if ! pacman -Si "$app" &> /dev/null && ! yay -Si "$app" &> /dev/null && ! paru -Si "$app" &> /dev/null; then
-        invalid_packages+=("$app")
-    fi
+for package in "${packages[@]}"; do
+  if ! $installer -Si "$package" &> /dev/null; then
+    invalid_packages+=("$package")
+  fi
 done
 
-# If there are invalid packages, notify the user and exit
-if [ ${#invalid_packages[@]} -ne 0 ]; then
-    echo "The following package(s) do not exist: ${invalid_packages[*]}"
-    echo "Please check the list and edit the script."
-    exit 1
+if [ "${#invalid_packages[@]}" -ne 0 ]; then
+  echo "The following packages are invalid or not found in repositories: ${invalid_packages[*]}"
+  echo "Please check the package list and try again."
+  exit 1
 fi
 
-# Confirm installation
-echo "All packages are valid: ${apps[*]}"
-read -rp "Do you want to install these packages? (y/N, default is y): " confirm
-confirm=${confirm,,}  # Convert to lowercase
-confirm=${confirm:-y}  # Default to "y" if no input
-
-if [[ "$confirm" != "y" ]]; then
-    echo "Aborting installation."
-    exit 0
-fi
-
-# Install the packages
-echo "Installing favorite apps..."
-for app in "${apps[@]}"; do
-    if pacman -Qi "$app" &> /dev/null; then
-        echo "$app is already installed. Skipping."
-    else
-        if command -v yay &> /dev/null; then
-            yay -S --noconfirm "$app"
-        else
-            paru -S --noconfirm "$app"
-        fi
-    fi
+# Step 5: Install packages not already installed
+to_install=()
+for package in "${packages[@]}"; do
+  if ! pacman -Qi "$package" &> /dev/null; then
+    to_install+=("$package")
+  fi
 done
 
-echo "All favorite apps have been processed."
+if [ "${#to_install[@]}" -eq 0 ]; then
+  echo "All packages are already installed."
+  exit 0
+fi
+
+echo "The following packages will be installed: ${to_install[*]}"
+read -p "Do you want to proceed with installation? (Y/n): " proceed
+proceed=${proceed:-Y}
+
+if [[ "$proceed" =~ ^[Yy]$ ]]; then
+  sudo $installer -S --needed "${to_install[@]}"
+  echo "Installation complete."
+else
+  echo "Installation aborted."
+  exit 0
+fi
+
