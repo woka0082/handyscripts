@@ -1,4 +1,4 @@
-## This is to install mbpfan
+## This is to install mbpfan for my old iMac
 
 #!/bin/bash
 

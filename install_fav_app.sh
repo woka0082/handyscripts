@@ -1,6 +1,8 @@
 ## Install favorite apps
 
-# Define the list of favorite apps
+# Define the list of favorite apps, change at will, 
+# but make sure they do exist and match the names in official repo and AUR exactly
+
 apps=(
     "loupe"
     "vlc"
