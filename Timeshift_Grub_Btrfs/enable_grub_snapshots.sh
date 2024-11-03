@@ -41,22 +41,25 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 # Install inotify-tools
 echo "Installing inotify-tools..."
 sudo pacman -Sy --noconfirm inotify-tools
+#!/bin/bash
 
-# Enable grub-btrfsd.service
-echo "Enabling grub-btrfsd.service..."
+# Enable and start grub-btrfsd.service
+echo "Enabling and starting grub-btrfsd.service..."
 sudo systemctl enable --now grub-btrfsd.service
 
+# Copy the default grub-btrfsd.service to the editable location
+echo "Creating a local copy of grub-btrfsd.service for customization..."
+sudo cp /usr/lib/systemd/system/grub-btrfsd.service /etc/systemd/system/
+
 # Modify grub-btrfsd.service to include --syslog --timeshift-auto
-echo "Editing /etc/systemd/system/grub-btrfsd.service to use --timeshift-auto option..."
+echo "Configuring grub-btrfsd to recognize Timeshift snapshots..."
 sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd|#&|' /etc/systemd/system/grub-btrfsd.service
 echo "ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto" | sudo tee -a /etc/systemd/system/grub-btrfsd.service > /dev/null
 
-# Restart grub-btrfsd.service
-echo "Restarting grub-btrfsd.service..."
+# Reload systemd and restart grub-btrfsd.service to apply changes
+echo "Restarting grub-btrfsd.service to apply new configuration..."
+sudo systemctl daemon-reload
 sudo systemctl restart grub-btrfsd.service
 
-echo "GRUB has been configured to detect Btrfs snapshots."
-echo "From now on, any snapshots created or removed by Timeshift will be reflected in the GRUB menu under the 'Snapshots' submenu at boot."
-
-echo "You can test this by rebooting your system and accessing the GRUB menu."
-echo "For rollback to a previous snapshot, simply select a snapshot from the GRUB 'Snapshots' submenu."
+echo "Configuration complete. GRUB is now set up to detect Btrfs snapshots created or removed by Timeshift."
+echo "Reboot your system to test that Timeshift snapshots appear under the 'Snapshots' submenu in the GRUB menu."

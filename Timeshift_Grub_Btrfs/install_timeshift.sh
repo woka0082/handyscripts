@@ -1,105 +1,90 @@
 #!/bin/bash
 
-echo "This is script 1/2 to install and configure Timeshift on an Arch Linux or Arch-based system with Btrfs and GRUB."
-echo "Please ensure your system meets these requirements before proceeding."
-echo "Note: Although Timeshift can run on other filesystems, script 2/2 will require Btrfs."
+echo "This is script 1/2 to install Timeshift on an Arch Linux or Arch-based system with Btrfs support and GRUB bootloader."
 
-# Check if pacman is installed (confirming Arch or Arch-based)
+# Check if the system uses pacman
 if ! command -v pacman &> /dev/null; then
-  echo "This script is designed for Arch Linux or Arch-based systems only."
-  echo "pacman package manager not found."
+  echo "This script requires an Arch-based system with pacman as the package manager."
   echo "Aborting..."
   exit 1
 fi
 
 # Check if the filesystem is Btrfs
 if ! findmnt -t btrfs / &> /dev/null; then
-  echo "The root filesystem is not Btrfs."
-  echo "Script 2/2 will require Btrfs, so this setup is not compatible."
+  echo "The root filesystem is not Btrfs. The upcoming script (2/2) will require Btrfs for GRUB snapshot support."
   echo "Aborting..."
   exit 1
 fi
 
-# Check if GRUB is the bootloader
+# Check if GRUB is installed
 if ! ls /boot/grub/grub.cfg &> /dev/null; then
-  echo "GRUB bootloader not detected."
-  echo "This setup is not compatible without GRUB."
+  echo "GRUB bootloader not detected. This script requires GRUB as the bootloader for snapshot support."
   echo "Aborting..."
   exit 1
 fi
 
 # Check if Timeshift is already installed
-if command -v timeshift &> /dev/null; then
+if pacman -Qi timeshift &> /dev/null; then
   echo "Timeshift is already installed."
-
-  # Check if Timeshift is using Btrfs mode
-  if grep -q '"btrfs_mode" : "true"' /etc/timeshift/timeshift.json 2>/dev/null; then
-    echo "Timeshift is already configured to use Btrfs for snapshots."
-  else
-    # Prompt user to change configuration to Btrfs
-    echo "Timeshift is not currently configured to use Btrfs for snapshots."
-    read -p "Do you want to change Timeshift to use Btrfs snapshots? (y/N): " change_to_btrfs
-    change_to_btrfs=${change_to_btrfs:-N}
-    if [[ "$change_to_btrfs" != "y" ]]; then
-      echo "Aborting..."
-      exit 1
-    fi
-
-    # Modify Timeshift configuration to use Btrfs
-    echo "Updating Timeshift configuration to use Btrfs for snapshots..."
-    sudo sed -i 's/"btrfs_mode" : "false"/"btrfs_mode" : "true"/' /etc/timeshift/timeshift.json
-    echo "Timeshift has been reconfigured to use Btrfs snapshots."
-  fi
 else
-  # Install Timeshift and xorg-xhost if Timeshift is not installed
-  echo "Timeshift is not installed. Proceeding with installation..."
-  sudo pacman -Sy --noconfirm timeshift xorg-xhost
-
-  # Set up Timeshift configuration file
-  CONFIG_DIR="/etc/timeshift"
-  CONFIG_FILE="$CONFIG_DIR/timeshift.json"
-
-  sudo mkdir -p "$CONFIG_DIR"
-  sudo tee "$CONFIG_FILE" > /dev/null <<EOL
-{
-  "backup_device_uuid" : "$(blkid -s UUID -o value $(mount | grep 'on / ' | awk '{print $1}'))",
-  "parent_device_uuid" : "",
-  "do_first_run" : "false",
-  "btrfs_mode" : "true",
-  "schedule_monthly" : "false",
-  "schedule_weekly" : "false",
-  "schedule_daily" : "false",
-  "schedule_hourly" : "false",
-  "schedule_boot" : "true",
-  "count_monthly" : "2",
-  "count_weekly" : "3",
-  "count_daily" : "5",
-  "count_hourly" : "6",
-  "count_boot" : "10",
-  "snapshot_size" : "0",
-  "exclude" : [
-    "+ /home",
-    "- /var/cache/pacman/pkg/*",
-    "- /var/log/*"
-  ]
-}
-EOL
-  echo "Timeshift has been installed and configured to use Btrfs for snapshots on your root device."
+  echo "Installing Timeshift..."
+  sudo pacman -Sy --noconfirm timeshift
 fi
 
-# Check if cronie is installed and running
-if ! command -v crond &> /dev/null; then
-  echo "Cronie is not installed. Installing cronie..."
+# Install xorg-xhost
+echo "Installing xorg-xhost..."
+sudo pacman -Sy --noconfirm xorg-xhost
+
+# Retrieve UUID of root device
+UUID=$(sudo findmnt -n -o UUID /)
+if [ -z "$UUID" ]; then
+  echo "Failed to retrieve the UUID of the root device. Aborting..."
+  exit 1
+fi
+
+# Configure Timeshift for Btrfs snapshots
+echo "Configuring Timeshift to use Btrfs snapshots..."
+sudo mkdir -p /etc/timeshift
+cat <<EOF | sudo tee /etc/timeshift/timeshift.json > /dev/null
+{
+  "backup_device_uuid": "$UUID",
+  "parent_device_uuid": "",
+  "do_first_run": false,
+  "btrfs_mode": "true",
+  "snapshot_type": "BTRFS",
+  "schedule_monthly": false,
+  "schedule_weekly": false,
+  "schedule_daily": false,
+  "schedule_hourly": false,
+  "schedule_boot": false,
+  "count_monthly": 2,
+  "count_weekly": 4,
+  "count_daily": 7,
+  "count_hourly": 0,
+  "count_boot": 5,
+  "exclude": [
+    "+ /var/log/**",
+    "+ /var/cache/pacman/pkg/**",
+    "- **"
+  ]
+}
+EOF
+
+# Check if cronie is installed and enabled, start if necessary
+if ! pacman -Qi cronie &> /dev/null; then
+  echo "Installing cronie for scheduled snapshots..."
   sudo pacman -Sy --noconfirm cronie
 fi
 
-# Enable and start cronie service
-echo "Ensuring cronie service is enabled and started..."
-sudo systemctl enable --now cronie
+if ! systemctl is-enabled cronie &> /dev/null; then
+  echo "Enabling cronie service..."
+  sudo systemctl enable --now cronie
+fi
 
 # Create the first on-demand snapshot
-sudo timeshift --create --comments "Initial on-demand snapshot" --tags O
+echo "Creating the first on-demand snapshot with Timeshift..."
+sudo timeshift --create --comments "Initial setup snapshot"
 
-echo "First on-demand snapshot created successfully."
-echo "You can now proceed with script 2/2: enable_grub_snapshots.sh"
-echo "Note: If you would like to customize your Timeshift configuration further, you can re-launch Timeshift later with the command 'timeshift-launcher'."
+echo "Timeshift installation and initial configuration complete."
+echo "You may later re-launch Timeshift to adjust settings if desired."
+echo "Now you can proceed with the second script, 'enable_btrfs_grub.sh' (2/2), to configure GRUB for Btrfs snapshot support."
