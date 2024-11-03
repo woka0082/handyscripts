@@ -13,7 +13,7 @@ if ! command -v pacman &> /dev/null; then
 fi
 
 # Check if the filesystem is Btrfs
-if ! df / | grep -q "btrfs"; then
+if ! findmnt -t btrfs / &> /dev/null; then
   echo "The root filesystem is not Btrfs."
   echo "Script 2/2 will require Btrfs, so this setup is not compatible."
   echo "Aborting..."
@@ -21,7 +21,7 @@ if ! df / | grep -q "btrfs"; then
 fi
 
 # Check if GRUB is the bootloader
-if ! grep -q "GRUB" /boot/grub/grub.cfg 2>/dev/null; then
+if ! ls /boot/grub/grub.cfg &> /dev/null; then
   echo "GRUB bootloader not detected."
   echo "This setup is not compatible without GRUB."
   echo "Aborting..."
