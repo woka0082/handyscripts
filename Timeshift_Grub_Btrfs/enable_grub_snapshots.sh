@@ -10,15 +10,17 @@ if ! command -v timeshift &> /dev/null; then
 fi
 
 # Check if the filesystem is Btrfs
-if ! df / | grep -q "btrfs"; then
-  echo "The root filesystem is not Btrfs. This script requires Btrfs to enable snapshot support in GRUB."
+if ! findmnt -t btrfs / &> /dev/null; then
+  echo "The root filesystem is not Btrfs."
+  echo "Script 2/2 will require Btrfs, so this setup is not compatible."
   echo "Aborting..."
   exit 1
 fi
 
 # Check if GRUB is the bootloader
-if ! grep -q "GRUB" /boot/grub/grub.cfg 2>/dev/null; then
-  echo "GRUB bootloader not detected. This script requires GRUB as the bootloader."
+if ! ls /boot/grub/grub.cfg &> /dev/null; then
+  echo "GRUB bootloader not detected."
+  echo "This setup is not compatible without GRUB."
   echo "Aborting..."
   exit 1
 fi
@@ -54,7 +56,7 @@ echo "Restarting grub-btrfsd.service..."
 sudo systemctl restart grub-btrfsd.service
 
 echo "GRUB has been configured to detect Btrfs snapshots."
-echo "From now on, any snapshots created or removed by Timeshift will be available in the GRUB menu under the 'Snapshots' submenu at boot."
+echo "From now on, any snapshots created or removed by Timeshift will be reflected in the GRUB menu under the 'Snapshots' submenu at boot."
 
 echo "You can test this by rebooting your system and accessing the GRUB menu."
 echo "For rollback to a previous snapshot, simply select a snapshot from the GRUB 'Snapshots' submenu."
