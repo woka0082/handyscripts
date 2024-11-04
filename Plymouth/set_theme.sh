@@ -1,44 +1,36 @@
 #!/bin/bash
 
-# Ensure the user is root
-if [[ $EUID -ne 0 ]]; then
+# Ensure the script is running as root
+if [[ "$EUID" -ne 0 ]]; then
   echo "Please run this script as root."
   exit 1
 fi
 
-# Display currently available themes
+# Display available themes with numbers for easy selection
 echo "Available Plymouth themes:"
-themes=($(ls /usr/share/plymouth/themes/))
-for i in "${!themes[@]}"; do
-  echo "$i) ${themes[i]}"
-done
+plymouth-set-default-theme --list | nl -w2 -s') '
 
-# Prompt the user to choose a theme
-read -r -p "Select a theme by number: " theme_choice
+# Prompt user to select a theme
+read -r -p "Enter the number corresponding to your chosen theme: " theme_choice
 
-# Validate selection
-if [[ ! "$theme_choice" =~ ^[0-9]+$ ]] || (( theme_choice < 0 || theme_choice >= ${#themes[@]} )); then
-  echo "Invalid choice. Exiting."
+# Get the theme name based on the selection
+theme_name=$(plymouth-set-default-theme --list | sed -n "${theme_choice}p")
+
+# Check if the selection was valid
+if [[ -z "$theme_name" ]]; then
+  echo "Invalid selection. Aborting."
   exit 1
 fi
 
-selected_theme="${themes[theme_choice]}"
-
-# Update Plymouth configuration to use the selected theme
-echo "Updating Plymouth configuration to use theme: $selected_theme..."
-sed -i "s/^Theme=.*$/Theme=$selected_theme/" /etc/plymouth/plymouth.conf
-echo "Plymouth theme updated to '$selected_theme'."
-
-# Provide hint for installing additional themes
-echo "To download new Plymouth themes, you can use the 'get_new_themes.sh' script."
-
-# Ask if the user wants to reboot
-echo "Would you like to reboot now to apply the new theme? (y/N)"
-read -r -p "Your choice: " reboot_choice
-
-if [[ "$reboot_choice" =~ ^(yes|y)$ ]]; then
-  echo "Rebooting system..."
-  reboot
-else
-  echo "Please reboot manually to apply the new theme."
+# Check if mkinitcpio is installed; if not, install it
+if ! command -v mkinitcpio &> /dev/null; then
+  echo "mkinitcpio not found. Installing it..."
+  pacman -Sy --needed mkinitcpio
 fi
+
+# Set the theme and regenerate initramfs
+echo "Setting Plymouth theme and regenerating initramfs..."
+plymouth-set-default-theme -R "$theme_name"
+
+echo "Plymouth theme successfully updated to '$theme_name'."
+echo "Reboot to apply the new theme."
