@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Ensure the user is root
+if [[ $EUID -ne 0 ]]; then
+  echo "Please run this script as root."
+  exit 1
+fi
+
 # Display currently available themes
 echo "Available Plymouth themes:"
 themes=($(ls /usr/share/plymouth/themes/))
@@ -20,7 +26,7 @@ selected_theme="${themes[theme_choice]}"
 
 # Update Plymouth configuration to use the selected theme
 echo "Updating Plymouth configuration to use theme: $selected_theme..."
-sudo sed -i "s/^Theme=.*$/Theme=$selected_theme/" /etc/plymouth/plymouth.conf
+sed -i "s/^Theme=.*$/Theme=$selected_theme/" /etc/plymouth/plymouth.conf
 echo "Plymouth theme updated to '$selected_theme'."
 
 # Provide hint for installing additional themes
@@ -32,7 +38,7 @@ read -r -p "Your choice: " reboot_choice
 
 if [[ "$reboot_choice" =~ ^(yes|y)$ ]]; then
   echo "Rebooting system..."
-  sudo reboot
+  reboot
 else
   echo "Please reboot manually to apply the new theme."
 fi
