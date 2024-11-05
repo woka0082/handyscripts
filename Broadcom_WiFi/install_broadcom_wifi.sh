@@ -1,4 +1,4 @@
-# This is to install the Broadcom WiFi on the old iMac
+# This is to install the Broadcom WiFi on the old iMac after the Arch installation
 
 #!/bin/bash
 
