@@ -23,14 +23,16 @@ echo "Backup of original GRUB configuration created at $GRUB_CFG_BACKUP."
 
 # List available themes
 echo "Available themes:"
+index=1  # Initialize index to 1
 THEME_LIST=()
-index=1
 for theme in "$THEMES_DIR"/*/; do
     theme_name=$(basename "$theme")
     echo "$index) $theme_name"
     THEME_LIST+=("$theme_name")
+    ((index++))  # Increment the index
 done
 echo "0) Quit"
+
 
 # Prompt user for selection
 while true; do
