@@ -1,0 +1,47 @@
+#!/bin/bash
+
+
+# local music player
+# go into the local music folders and run this script
+# use mpv as backend and cava for virtual effect
+# tested on kitty and xterm, but can be modified for any terminals
+# Add the next 2 lines to ~/.config/kitty/kitty.conf to to make sure the "Virtual Effect Split Pane" work
+# allow_remote_control yes
+# listen_on unix:/tmp/mykitty
+
+
+# Function to launch cava based on terminal type
+launch_visualizer() {
+    if [ "$TERMINAL_EMULATOR" = "kitty" ] || [ -n "$KITTY_PID" ]; then
+        # Create a split in Kitty (top for music, bottom for cava)
+        # We use --location=after to put it below
+        kitty @ launch --location=after --type=window --title="Visualizer" cava
+    else
+        # Fallback for xterm/uxterm - opens a small floating window
+        xterm -geometry 80x10 -T "Visualizer" -e cava &
+        CAVA_PID=$!
+    fi
+}
+
+# Cleanup visualizer on exit
+cleanup() {
+    if [ -n "$CAVA_PID" ]; then
+        kill "$CAVA_PID" 2>/dev/null
+    fi
+    # If in kitty, we don't strictly need to kill the window as it closes when cava exits,
+    # but 'q' in mpv will leave the split open.
+}
+trap cleanup EXIT
+
+launch_visualizer
+
+clear
+echo -e "\n  \e[1;32mMPV Folder Player + CAVA\e[0m"
+echo -e "  ------------------------"
+echo -e "  \e[1mSpace\e[0m : Pause/Play  \e[1m>\e[0m : Next"
+echo -e "  \e[1m9/0\e[0m   : Vol Up/Dn   \e[1mq\e[0m : Quit\n"
+
+mpv --msg-level=all=status --no-video --term-osd-bar .
+
+# If you ever want to play your music in a random order (shuffle), 
+# you can just add --shuffle to the mpv line in your script
